@@ -1,4 +1,5 @@
 from chromadb import Client, Collection
+from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 import pickle
 
@@ -17,22 +18,21 @@ def create_vector_db(texts, db_name="russian_text_db"):
         Collection: A ChromaDB collection containing embedded texts.
     """
     # Initialize ChromaDB client
-    client = Client()
+    client = Client(Settings(
+        persist_directory="./project"  # Directory to save data
+    ))
 
-    # Load pre-trained model for Russian embeddings
-
-
-    # Create a collection in ChromaDB
     collection = client.get_or_create_collection(db_name)
 
-    # Generate embeddings for each text
-    embeddings = model.encode(list(texts.keys()), convert_to_tensor=True, normalize_embeddings=True)
+    if collection.count() == 0:
+        # Generate embeddings for each text
+        embeddings = model.encode(list(texts.keys()), convert_to_tensor=True, normalize_embeddings=True)
 
-    # Add embeddings and texts to the collection
-    for i, embedding in enumerate(embeddings):
-        collection.add(ids=[str(i)], embeddings=[embedding.tolist()], documents=[texts[list(texts.keys())[i]]])
+        # Add embeddings and texts to the collection
+        for i, embedding in enumerate(embeddings):
+            collection.add(ids=[str(i)], embeddings=[embedding.tolist()], documents=[texts[list(texts.keys())[i]]])
 
-    print(f"Database '{db_name}' created with {len(texts)} entries.")
+        print(f"Database '{db_name}' created with {len(texts)} entries.")
     return collection
 
 
@@ -55,14 +55,12 @@ def query_vector_db(query_text, collection, model, top_k=5):
     # Search for similar embeddings in the collection
     results = collection.query(query_embeddings=[query_embedding.tolist()], n_results=top_k)
 
-
-
     return results['documents']
 
 
 def load_vector_db():
     # Example usage
-    with open('project/dict_db_2.pkl', 'rb') as f:
+    with open('project/data/dict_db_2.pkl', 'rb') as f:
         d = pickle.load(f)
     vector_db = create_vector_db(d)
     return vector_db
@@ -76,4 +74,3 @@ if __name__ == '__main__':
         results = query_vector_db(query_text, v, model)
         for i, result in enumerate(results):
             print(result)
-

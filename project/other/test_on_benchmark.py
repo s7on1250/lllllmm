@@ -6,14 +6,14 @@ import requests
 import openai
 from llm import llm, llm2, llm3, laws_for_text
 
-token = "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"
-url = "https://openrouter.ai/api/v1/chat/completions"
+api_key="API_KEY",
+base_url="SAMBANOVA",
 
 
 def check(true, pred):
     client = openai.OpenAI(
-        api_key="2212f4cc-8565-4bdd-9030-9102ccc7bff1",
-        base_url="https://api.sambanova.ai/v1",
+        api_key=api_key,
+        base_url=base_url,
     )
 
     while True:
@@ -35,7 +35,7 @@ def check(true, pred):
     return response.choices[0].message.content
 
 
-with open('project/bench.pkl', 'rb') as f:
+with open('project/data/bench.pkl', 'rb') as f:
     d = pickle.load(f)
 
 q = []

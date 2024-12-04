@@ -28,14 +28,14 @@ for i, section in enumerate(sections[1:], start=1):  # Skipping the first split 
         "Solution": solution_part.strip()
     }
 
-token = "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"
-url = "https://openrouter.ai/api/v1/chat/completions"
+api_key = 'API_KEY'
+base_url = 'SAMBANOVA'
 
 
 def reform_q(content):
     client = openai.OpenAI(
-        api_key="2212f4cc-8565-4bdd-9030-9102ccc7bff1",
-        base_url="https://api.sambanova.ai/v1",
+        api_key=api_key,
+        base_url=base_url,
     )
 
     while True:
@@ -91,5 +91,5 @@ for prob_num, content in problems_solutions.items():
     p_q = p + '\n\n' + q
     problems.append(p_q)
 
-with open('project/bench.pkl', 'wb') as f:
+with open('project/data/bench.pkl', 'wb') as f:
     pickle.dump(problems, f)
