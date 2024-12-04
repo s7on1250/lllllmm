@@ -1,5 +1,5 @@
 import time
-
+import streamlit as st
 import requests
 import sys
 import json
@@ -10,7 +10,7 @@ from PyPDF2 import PdfReader
 
 
 #api_key = os.getenv("API_KEY")
-api_key = "API_KEY"
+api_key = st.secrets["API_KEY"]
 base_url = "https://api.sambanova.ai/v1"
 ready_template = """Q. По мнению заявителя Д.Д. Завраг, врач-акушер-гинеколог П.П. Линник нарушил клятву Гиппократа, а именно произвел операцию медицинского аборта пациентке З.П. Дворянской. Клятва Гиппократа, по мнению заявителя, не допускает проведения абортов по желанию женщины, в связи с чем врач должен быть привлечен к ответственности и лишен права заниматься медицинской практикой.
 Задание: 
