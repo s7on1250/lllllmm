@@ -203,7 +203,7 @@ def split_into_chunks(text, caption, chunk_size=150000):
         # Ensure we do not split words by finding the last space before the cutoff
         if end < len(text):
             end = text.rfind(" ", start, end) + 1  # Find last space
-        chunks.append(caption + '\n' + text[start:end].strip())
+        chunks.append('Источник: ' + caption + '\n' + text[start:end].strip())
         start = end
     return chunks
 
