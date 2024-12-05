@@ -185,7 +185,7 @@ def reply(text, rag_list):
     return response.choices[0].message.content
 
 
-def split_into_chunks(text, chunk_size=150000):
+def split_into_chunks(text, caption, chunk_size=150000):
     """
     Split a text into chunks of approximately `chunk_size` characters.
 
@@ -203,7 +203,7 @@ def split_into_chunks(text, chunk_size=150000):
         # Ensure we do not split words by finding the last space before the cutoff
         if end < len(text):
             end = text.rfind(" ", start, end) + 1  # Find last space
-        chunks.append(text[start:end].strip())
+        chunks.append(caption + '\n' + text[start:end].strip())
         start = end
     return chunks
 
@@ -229,7 +229,7 @@ def inference(text, uploaded_files):
     for file in uploaded_files:
         try:
             content = read_pdf(file)
-            chunks = split_into_chunks(content)
+            chunks = split_into_chunks(content, file.name)
             contents += chunks
         except Exception as e:
             print(e)
