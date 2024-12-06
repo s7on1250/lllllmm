@@ -12,6 +12,7 @@ from PyPDF2 import PdfReader
 
 api_key = st.secrets["API_KEY"]
 base_url = "https://api.sambanova.ai/v1"
+example_promt = ''
 
 
 def first_reasoning(text):
@@ -44,7 +45,7 @@ def first_reasoning(text):
 
 
 def final_thoughts(text, rag_info):
-    prompt = f'Q. {text}\n База знаний: {rag_info}. A. Давайте разложим ответ по полочкам и доступным фактам.'
+    prompt = f'Пример того, как надо выражать мысли при ответе:\n {example_promt} \nQ. {text}\n База знаний: {rag_info}. При цитировании из базы знаний так же упоминай источник. A. Давайте разложим ответ по полочкам и доступным фактам.'
     client = openai.OpenAI(
         api_key=api_key,
         base_url=base_url,
@@ -75,7 +76,7 @@ def retrieving_key_information(contents, query):
                 messages=[{"role": "system",
                            "content": "Ты профессиональный юрист и хорошо понимаешь суть текста. Так же ты хорошо выражаешь свои мысли."},
                           {"role": "user",
-                           "content": f'Найди в этом тексте то, что может подходить к этим ключевым словам. Формат ответа: "-" если нет информации. Если есть информация, то процитируй полную статью. Что искать: {query}. Где искать: {content}.'}],
+                           "content": f'Найди в этом тексте то, что может подходить к этим ключевым словам. Формат ответа: "-" если нет информации. Если есть информация, то процитируй полную статью и источник информации. Что искать: {query}. Где искать: {content}.'}],
                 temperature=0.1,
                 top_p=0.1
             )
@@ -92,77 +93,11 @@ def retrieving_key_information(contents, query):
         messages=[{"role": "system",
                    "content": "Ты профессиональный юрист и хорошо понимаешь суть текста. Так же ты хорошо выражаешь свои мысли."},
                   {"role": "user",
-                   "content": f'Оставь полные цитаты тех статей, про которые есть информации. Если в тексте есть сомнение, не включай статью. {useful_info}'}],
+                   "content": f'Оставь полные цитаты и их источник в формате: "Источник: статья" тех статей, про которые есть информации. Если в тексте есть сомнение, не включай статью. {useful_info}'}],
         temperature=0.1,
         top_p=0.1
     )
     print(response.choices[0].message.content)
-    return response.choices[0].message.content
-
-def laws_for_text(chunk):
-    laws_set = set()
-    for obj in chunk:
-        if len(obj) > 0:
-            laws = vector_db.query_vector_db(obj, db, vector_db.model, 2)[0]
-            for law in laws:
-                laws_set.add(law)
-    return laws_set
-
-
-def break_down_problem(text):
-    client = openai.OpenAI(
-        api_key=api_key,
-        base_url=base_url,
-    )
-
-    response = client.chat.completions.create(
-        model='Meta-Llama-3.1-405B-Instruct',
-        messages=[{"role": "system",
-                   "content": "Ты профессиональный юрист и хорошо понимаешь суть текста. Ты НЕ пишешь статьи кодекса, ЕСЛИ эти статьи не упомянены напрямую в задаче"},
-                  {"role": "user",
-                   "content": f"Напиши список преступлений, которые могут привлекаться по статьям УК РФ. НИ В КОЕМ СЛУЧАЙ НЕ ОТВЕЧАЙ КАКИЕ ЭТО СТАТЬИ. Формат ответа: * Пункт1\n * Пункт2\n. '{text}'"}],
-        temperature=0.1,
-        top_p=0.1
-    )
-
-    return response.choices[0].message.content
-
-
-def translate(text, from_lang, to_lang):
-    client = openai.OpenAI(
-        api_key=api_key,
-        base_url=base_url,
-    )
-
-    response = client.chat.completions.create(
-        model='Meta-Llama-3.1-405B-Instruct',
-        messages=[{"role": "system",
-                   "content": "You are professional translator"},
-                  {"role": "user",
-                   "content": f"Translate this from {from_lang} language to {to_lang}. ANSWER ONLY WITH TRANSLATION '{text}'"}],
-        temperature=0.1,
-        top_p=0.1
-    )
-
-    return response.choices[0].message.content
-
-
-def main_summary(text):
-    client = openai.OpenAI(
-        api_key=api_key,
-        base_url=base_url,
-    )
-
-    response = client.chat.completions.create(
-        model='Meta-Llama-3.1-405B-Instruct',
-        messages=[{"role": "system",
-                   "content": "Ты профессиональный юрист и хорошо понимаешь суть текста. Ты НЕ пишешь статьи кодекса, ЕСЛИ эти статьи не упомянены напрямую в задаче"},
-                  {"role": "user",
-                   "content": f"Напиши краткое содержание этого текста с главным смыслом. НИ В КОЕМ СЛУЧАЙ НЕ ОТВЕЧАЙ КАКИЕ ЭТО СТАТЬИ.'{text}'"}],
-        temperature=0.1,
-        top_p=0.1
-    )
-
     return response.choices[0].message.content
 
 
@@ -224,7 +159,9 @@ def read_pdf(file):
         text += page.extract_text()
     return text
 
-def inference(text, uploaded_files):
+def inference(text, uploaded_files, ex_prompt):
+    global example_promt
+    example_promt = ex_prompt
     contents = []
     for file in uploaded_files:
         try:
